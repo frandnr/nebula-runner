@@ -4,7 +4,7 @@
   "description": "Schiva meteoriti, raccogli cristalli, attiva power-up e scala i livelli",
   "start_url": ".",
   "display": "fullscreen",
-  "status_bar": "black-translucent",
+  "status_bar": "black",
   "background_color": "#070816",
   "theme_color": "#7cf7ff",
   "orientation": "any",

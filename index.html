@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <meta
             name="viewport"
-            content="width=device-width,initial-scale=1,viewport-fit=cover"
+            content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"
         />
         <title>Nebula Runner — HTML Game</title>
         
@@ -12,7 +12,7 @@
         <meta name="description" content="Schiva meteoriti, raccogli cristalli, attiva power-up e scala i livelli">
         <meta name="theme-color" content="#7cf7ff">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
         <meta name="apple-mobile-web-app-title" content="Nebula Runner">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="application-name" content="Nebula Runner">
@@ -72,27 +72,28 @@
             
             /* iOS PWA fixes */
             @supports (-webkit-touch-callout: none) {
-                /* Add safe area insets for iOS status bar */
-                body {
-                    padding-top: env(safe-area-inset-top);
-                    padding-bottom: env(safe-area-inset-bottom);
-                }
-                
-                #wrap {
-                    height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-                }
-                
-                /* Prevent white bar at bottom */
+                /* Make the app truly fullscreen */
                 html {
                     position: fixed;
                     width: 100%;
                     height: 100%;
+                    overflow: hidden;
                 }
                 
                 body {
                     position: fixed;
                     width: 100%;
                     height: 100%;
+                    overflow: hidden;
+                    /* Add safe area insets for iOS status bar and home indicator */
+                    padding-top: env(safe-area-inset-top);
+                    padding-bottom: env(safe-area-inset-bottom);
+                    box-sizing: border-box;
+                }
+                
+                #wrap {
+                    height: 100%;
+                    width: 100%;
                 }
             }
             #wrap {
