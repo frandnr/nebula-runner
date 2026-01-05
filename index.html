@@ -1318,31 +1318,19 @@
 
                 // ===== Update =====
                 function applyInput(dt) {
-                    // mouse/touch drag -> steer toward pointer
-                    const usingPointer =
-                        pointer.active &&
-                        (pointer.down ||
-                            dist(pointer.x, pointer.y, player.x, player.y) <
-                                180);
+                    // keyboard movement only
                     let ax = 0,
                         ay = 0;
 
-                    if (usingPointer) {
-                        const dx = pointer.x - player.x;
-                        const dy = pointer.y - player.y;
-                        ax = clamp(dx * 2.6, -520, 520);
-                        ay = clamp(dy * 2.6, -520, 520);
-                    } else {
-                        const up = keys.has("KeyW") || keys.has("ArrowUp");
-                        const dn = keys.has("KeyS") || keys.has("ArrowDown");
-                        const lf = keys.has("KeyA") || keys.has("ArrowLeft");
-                        const rt = keys.has("KeyD") || keys.has("ArrowRight");
-                        ax = (rt ? 1 : 0) - (lf ? 1 : 0);
-                        ay = (dn ? 1 : 0) - (up ? 1 : 0);
-                        const len = Math.hypot(ax, ay) || 1;
-                        ax = (ax / len) * 520;
-                        ay = (ay / len) * 520;
-                    }
+                    const up = keys.has("KeyW") || keys.has("ArrowUp");
+                    const dn = keys.has("KeyS") || keys.has("ArrowDown");
+                    const lf = keys.has("KeyA") || keys.has("ArrowLeft");
+                    const rt = keys.has("KeyD") || keys.has("ArrowRight");
+                    ax = (rt ? 1 : 0) - (lf ? 1 : 0);
+                    ay = (dn ? 1 : 0) - (up ? 1 : 0);
+                    const len = Math.hypot(ax, ay) || 1;
+                    ax = (ax / len) * 680;
+                    ay = (ay / len) * 680;
 
                     // boost (dash)
                     const wantBoost = keys.has("Space");
@@ -1364,7 +1352,7 @@
                     }
 
                     // physics
-                    const drag = 7.8;
+                    const drag = 1.8;
                     const maxV = state.boostActive > 0 ? 820 : 460;
                     player.vx += ax * dt;
                     player.vy += ay * dt;
