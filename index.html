@@ -388,6 +388,9 @@
                 .card {
                     min-width: 160px;
                 }
+                .keys {
+                    display: none;
+                }
             }
         </style>
     </head>
@@ -1318,16 +1321,30 @@
 
                 // ===== Update =====
                 function applyInput(dt) {
-                    // keyboard movement only
+                    // Movement
                     let ax = 0,
                         ay = 0;
-
-                    const up = keys.has("KeyW") || keys.has("ArrowUp");
-                    const dn = keys.has("KeyS") || keys.has("ArrowDown");
-                    const lf = keys.has("KeyA") || keys.has("ArrowLeft");
-                    const rt = keys.has("KeyD") || keys.has("ArrowRight");
-                    ax = (rt ? 1 : 0) - (lf ? 1 : 0);
-                    ay = (dn ? 1 : 0) - (up ? 1 : 0);
+                    
+                    if (pointer.active) {
+                        // Touch/Mouse movement: calculate direction to pointer
+                        const dx = pointer.x - player.x;
+                        const dy = pointer.y - player.y;
+                        const len = Math.hypot(dx, dy);
+                        // Only move if far enough away from the pointer to prevent jittering
+                        if (len > 10) { 
+                            ax = dx / len;
+                            ay = dy / len;
+                        }
+                    } else {
+                        // Keyboard movement: calculate direction from keys
+                        const up = keys.has("KeyW") || keys.has("ArrowUp");
+                        const dn = keys.has("KeyS") || keys.has("ArrowDown");
+                        const lf = keys.has("KeyA") || keys.has("ArrowLeft");
+                        const rt = keys.has("KeyD") || keys.has("ArrowRight");
+                        ax = (rt ? 1 : 0) - (lf ? 1 : 0);
+                        ay = (dn ? 1 : 0) - (up ? 1 : 0);
+                    }
+                    
                     const len = Math.hypot(ax, ay) || 1;
                     ax = (ax / len) * 680;
                     ay = (ay / len) * 680;
