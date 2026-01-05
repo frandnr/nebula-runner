@@ -496,10 +496,10 @@
                 <div class="card">
                     <h1>CONTROLLI</h1>
                     <div class="pill">
-                        WASD / Frecce • Space Boost • P Pausa
+                        Mouse: Muovi • Click/Space: Boost • P: Pausa
                     </div>
                     <div style="height: 10px"></div>
-                    <div class="pill">Mouse/Touch: trascina la nave</div>
+                    <div class="pill">Touch: Trascina sul mobile</div>
                 </div>
             </div>
         </div>
@@ -523,12 +523,11 @@
                             <h3>Come si gioca</h3>
                             <div class="keys">
                                 <div class="k">
-                                    <span class="kbd"
-                                        ><b>WASD</b> / <b>↑↓←→</b></span
-                                    ><span>Muovi</span>
+                                    <span class="kbd"><b>MOUSE</b></span
+                                    ><span>Muovi la nave</span>
                                 </div>
                                 <div class="k">
-                                    <span class="kbd"><b>SPACE</b></span
+                                    <span class="kbd"><b>CLICK / SPACE</b></span
                                     ><span>Boost (dash)</span>
                                 </div>
                                 <div class="k">
@@ -536,8 +535,8 @@
                                     ><span>Pausa</span>
                                 </div>
                                 <div class="k">
-                                    <span class="kbd"><b>MOUSE</b></span
-                                    ><span>Trascina</span>
+                                    <span class="kbd"><b>TOUCH</b></span
+                                    ><span>Trascina sul mobile</span>
                                 </div>
                             </div>
                             <div class="smallNote">
@@ -563,9 +562,8 @@
                             </div>
                             <div style="height: 10px"></div>
                             <div class="smallNote">
-                                Suggerimento: se vuoi “precisione”, usa
-                                tastiera. Se vuoi “fluidità”, trascina la nave
-                                col mouse 🖱️
+                                Suggerimento: usa il mouse per controllare fluidamente
+                                la nave su PC, e il dito sul mobile 🖱️📱
                             </div>
                             <div class="btns">
                                 <button id="start">Gioca ora</button>
@@ -822,15 +820,8 @@
                     "keydown",
                     (e) => {
                         keys.add(e.code);
-                        if (
-                            [
-                                "ArrowUp",
-                                "ArrowDown",
-                                "ArrowLeft",
-                                "ArrowRight",
-                                "Space",
-                            ].includes(e.code)
-                        )
+                        // Only prevent default for space (boost) and pause
+                        if (["Space"].includes(e.code))
                             e.preventDefault();
                         if (e.code === "KeyP") togglePause();
                     },
@@ -844,9 +835,14 @@
                     down: false,
                     active: false,
                 };
+                
+                // Check if it's a mobile device
+                const isMobile = window.innerWidth < 800;
+                
                 window.addEventListener("pointerdown", (e) => {
                     pointer.down = true;
-                    // Activate pointer movement for both touch and mouse events
+                    // On mobile, activate pointer movement only on touch
+                    // On desktop, activate immediately for unified control
                     pointer.active = true;
                     // Convert screen coordinates to game world coordinates
                     const rect = canvas.getBoundingClientRect();
@@ -857,17 +853,21 @@
                     ensureAudio();
                 });
                 
-                // Also track mouse movement when laser power is active
+                // Track mouse movement continuously on PC for unified control
                 window.addEventListener("mousemove", (e) => {
-                    if (state.power === "laser") {
-                        // Convert screen coordinates to game world coordinates
-                        const rect = canvas.getBoundingClientRect();
-                        const scaleX = W / rect.width;
-                        const scaleY = H / rect.height;
-                        pointer.x = (e.clientX - rect.left) * scaleX;
-                        pointer.y = (e.clientY - rect.top) * scaleY;
+                    // Convert screen coordinates to game world coordinates
+                    const rect = canvas.getBoundingClientRect();
+                    const scaleX = W / rect.width;
+                    const scaleY = H / rect.height;
+                    pointer.x = (e.clientX - rect.left) * scaleX;
+                    pointer.y = (e.clientY - rect.top) * scaleY;
+                    
+                    // On PC, always make pointer active for unified control
+                    if (!isMobile) {
+                        pointer.active = true;
                     }
                 });
+                
                 window.addEventListener("pointermove", (e) => {
                     if (pointer.active) {
                         // Convert screen coordinates to game world coordinates
@@ -878,10 +878,14 @@
                         pointer.y = (e.clientY - rect.top) * scaleY;
                     }
                 });
+                
                 window.addEventListener("pointerup", () => {
                     pointer.down = false;
-                    // Keep pointer.active true on mouse up for continuous laser tracking
-                    if (pointer.active) {
+                    // On mobile, deactivate pointer on touch end
+                    // On PC, keep active for continuous control
+                    if (isMobile) {
+                        pointer.active = false;
+                    } else {
                         pointer.active = true;
                     }
                 });
@@ -1416,12 +1420,13 @@
 
                 // ===== Update =====
                 function applyInput(dt) {
-                    // Movement
+                    // Movement - unified mouse/touch controls
                     let ax = 0,
                         ay = 0;
                     
+                    // Always use pointer-based movement (mouse on PC, touch on mobile)
                     if (pointer.active) {
-                        // Touch/Mouse movement: calculate direction to pointer
+                        // Calculate direction to pointer
                         const dx = pointer.x - player.x;
                         const dy = pointer.y - player.y;
                         const len = Math.hypot(dx, dy);
@@ -1431,21 +1436,17 @@
                             ay = dy / len;
                         }
                     } else {
-                        // Keyboard movement: calculate direction from keys
-                        const up = keys.has("KeyW") || keys.has("ArrowUp");
-                        const dn = keys.has("KeyS") || keys.has("ArrowDown");
-                        const lf = keys.has("KeyA") || keys.has("ArrowLeft");
-                        const rt = keys.has("KeyD") || keys.has("ArrowRight");
-                        ax = (rt ? 1 : 0) - (lf ? 1 : 0);
-                        ay = (dn ? 1 : 0) - (up ? 1 : 0);
+                        // If no pointer is active, don't move (keyboard movement disabled on PC)
+                        ax = 0;
+                        ay = 0;
                     }
                     
                     const len = Math.hypot(ax, ay) || 1;
                     ax = (ax / len) * 680;
                     ay = (ay / len) * 680;
 
-                    // boost (dash)
-                    const wantBoost = keys.has("Space");
+                    // boost (dash) - pointer down/touch or spacebar
+                    const wantBoost = pointer.down || keys.has("Space");
                     if (
                         wantBoost &&
                         state.boost >= 1 &&
