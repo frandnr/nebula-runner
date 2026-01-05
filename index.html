@@ -846,10 +846,8 @@
                 };
                 window.addEventListener("pointerdown", (e) => {
                     pointer.down = true;
-                    // Only activate pointer movement for touch events
-                    if (e.pointerType === 'touch') { 
-                        pointer.active = true;
-                    }
+                    // Activate pointer movement for both touch and mouse events
+                    pointer.active = true;
                     // Convert screen coordinates to game world coordinates
                     const rect = canvas.getBoundingClientRect();
                     const scaleX = W / rect.width;
@@ -857,6 +855,18 @@
                     pointer.x = (e.clientX - rect.left) * scaleX;
                     pointer.y = (e.clientY - rect.top) * scaleY;
                     ensureAudio();
+                });
+                
+                // Also track mouse movement when laser power is active
+                window.addEventListener("mousemove", (e) => {
+                    if (state.power === "laser") {
+                        // Convert screen coordinates to game world coordinates
+                        const rect = canvas.getBoundingClientRect();
+                        const scaleX = W / rect.width;
+                        const scaleY = H / rect.height;
+                        pointer.x = (e.clientX - rect.left) * scaleX;
+                        pointer.y = (e.clientY - rect.top) * scaleY;
+                    }
                 });
                 window.addEventListener("pointermove", (e) => {
                     if (pointer.active) {
@@ -870,6 +880,10 @@
                 });
                 window.addEventListener("pointerup", () => {
                     pointer.down = false;
+                    // Keep pointer.active true on mouse up for continuous laser tracking
+                    if (pointer.active) {
+                        pointer.active = true;
+                    }
                 });
 
                 // ===== Game state =====
@@ -984,14 +998,21 @@
                 }
 
                 function shootLaser() {
+                    // Calculate angle to mouse pointer
+                    const dx = pointer.x - player.x;
+                    const dy = pointer.y - player.y;
+                    const mouseAngle = Math.atan2(dy, dx);
+                    
                     // 3 beams spread
                     const spreads = [-0.22, 0, 0.22];
                     for (const sp of spreads) {
+                        const angle = mouseAngle + sp;
+                        const speed = 420;
                         lasers.push({
                             x: player.x,
                             y: player.y - 18,
-                            vx: Math.sin(player.angle + sp) * 220,
-                            vy: -380 + Math.cos(player.angle + sp) * -120,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
                             life: 0.55,
                             t: 0,
                             w: rnd(3.2, 4.6),
