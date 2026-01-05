@@ -69,6 +69,32 @@
                     "Segoe UI Emoji";
                 overflow: hidden;
             }
+            
+            /* iOS PWA fixes */
+            @supports (-webkit-touch-callout: none) {
+                /* Add safe area insets for iOS status bar */
+                body {
+                    padding-top: env(safe-area-inset-top);
+                    padding-bottom: env(safe-area-inset-bottom);
+                }
+                
+                #wrap {
+                    height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+                }
+                
+                /* Prevent white bar at bottom */
+                html {
+                    position: fixed;
+                    width: 100%;
+                    height: 100%;
+                }
+                
+                body {
+                    position: fixed;
+                    width: 100%;
+                    height: 100%;
+                }
+            }
             #wrap {
                 position: fixed;
                 inset: 0;
@@ -823,14 +849,22 @@
                     if (e.pointerType === 'touch') { 
                         pointer.active = true;
                     }
-                    pointer.x = e.clientX;
-                    pointer.y = e.clientY;
+                    // Convert screen coordinates to game world coordinates
+                    const rect = canvas.getBoundingClientRect();
+                    const scaleX = W / rect.width;
+                    const scaleY = H / rect.height;
+                    pointer.x = (e.clientX - rect.left) * scaleX;
+                    pointer.y = (e.clientY - rect.top) * scaleY;
                     ensureAudio();
                 });
                 window.addEventListener("pointermove", (e) => {
                     if (pointer.active) {
-                        pointer.x = e.clientX;
-                        pointer.y = e.clientY;
+                        // Convert screen coordinates to game world coordinates
+                        const rect = canvas.getBoundingClientRect();
+                        const scaleX = W / rect.width;
+                        const scaleY = H / rect.height;
+                        pointer.x = (e.clientX - rect.left) * scaleX;
+                        pointer.y = (e.clientY - rect.top) * scaleY;
                     }
                 });
                 window.addEventListener("pointerup", () => {
