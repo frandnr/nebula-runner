@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nebula-runner-v1';
+const CACHE_NAME = 'nebula-runner-v2';
 const urlsToCache = [
   '.',
   'index.html',
@@ -24,6 +24,8 @@ self.addEventListener('install', function(event) {
         return cache.addAll(urlsToCache);
       })
   );
+  // Force the new service worker to become active
+  self.skipWaiting();
 });
 
 // Fetch event - serve from cache when offline
@@ -73,4 +75,6 @@ self.addEventListener('activate', function(event) {
       );
     })
   );
+  // Take control of all pages immediately
+  self.clients.claim();
 });

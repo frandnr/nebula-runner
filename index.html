@@ -428,6 +428,31 @@
                 transform: translateX(-50%) translateY(-2px);
             }
 
+            .mobile-pause {
+                position: fixed;
+                top: 16px;
+                right: 16px;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                font-size: 18px;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(
+                    135deg,
+                    rgba(124, 247, 255, 0.32),
+                    rgba(255, 92, 245, 0.22)
+                );
+                border: 1px solid rgba(124, 247, 255, 0.28);
+                box-shadow:
+                    0 12px 40px rgba(0, 0, 0, 0.45),
+                    0 0 28px rgba(124, 247, 255, 0.1);
+                pointer-events: auto;
+                z-index: 1000;
+            }
+
             @media (max-width: 800px) {
                 .grid {
                     grid-template-columns: 1fr;
@@ -440,6 +465,9 @@
                 }
                 .keys {
                     display: none;
+                }
+                .mobile-pause {
+                    display: flex !important;
                 }
             }
         </style>
@@ -496,11 +524,12 @@
                 <div class="card">
                     <h1>CONTROLLI</h1>
                     <div class="pill">
-                        Mouse: Muovi • Click/Space: Boost • P: Pausa
+                        Mouse: Muovi • Click/Space: Boost • ESC: Pausa
                     </div>
                     <div style="height: 10px"></div>
                     <div class="pill">Touch: Trascina sul mobile</div>
                 </div>
+                <button class="mobile-pause" id="mobilePause" style="display: none;">⏸️</button>
             </div>
         </div>
 
@@ -531,7 +560,7 @@
                                     ><span>Boost (dash)</span>
                                 </div>
                                 <div class="k">
-                                    <span class="kbd"><b>P</b></span
+                                    <span class="kbd"><b>ESC</b></span
                                     ><span>Pausa</span>
                                 </div>
                                 <div class="k">
@@ -579,7 +608,7 @@
                 </div>
                 <div class="footer">
                     <div>
-                        Tip: premi <b>P</b> in gioco per mettere in pausa.
+                        Tip: premi <b>ESC</b> in gioco per mettere in pausa.
                     </div>
                     <div>Fatto in puro <b>HTML + Canvas</b> 💻</div>
                 </div>
@@ -601,7 +630,7 @@
                         <button class="btnGhost" id="backMenu">Menu</button>
                     </div>
                     <div class="smallNote">
-                        Shortcut: premi <b>P</b> per riprendere.
+                        Shortcut: premi <b>ESC</b> per riprendere.
                     </div>
                 </div>
             </div>
@@ -716,6 +745,7 @@
                 const backMenuBtn2 = document.getElementById("backMenu2");
                 const muteBtn = document.getElementById("mute");
                 const resetBestBtn = document.getElementById("resetBest");
+                const mobilePauseBtn = document.getElementById("mobilePause");
 
                 const finalLine = document.getElementById("finalLine");
                 const finalScore = document.getElementById("finalScore");
@@ -823,7 +853,7 @@
                         // Only prevent default for space (boost) and pause
                         if (["Space"].includes(e.code))
                             e.preventDefault();
-                        if (e.code === "KeyP") togglePause();
+                        if (e.code === "Escape") togglePause();
                     },
                     { passive: false },
                 );
@@ -1201,6 +1231,8 @@
                         slide: -120,
                     });
                 };
+                
+                mobilePauseBtn.onclick = () => togglePause();
 
                 // ===== HUD update =====
                 function updateHUD() {

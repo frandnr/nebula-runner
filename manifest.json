@@ -52,5 +52,6 @@
     }
   ],
   "categories": ["games", "entertainment"],
-  "lang": "it"
+  "lang": "it",
+  "version": "1.0.1"
 }
