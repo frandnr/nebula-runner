@@ -704,8 +704,15 @@
                     const iw = innerWidth;
                     const ih = innerHeight;
 
+                    // More responsive zoom for different mobile sizes
                     if (iw < 800) {
-                        zoom = 1.4; // Zoom out by 40% on mobile
+                        if (iw < 400) {
+                            zoom = 1.6; // Zoom out more for very small screens
+                        } else if (iw < 600) {
+                            zoom = 1.5; // Medium zoom for small screens
+                        } else {
+                            zoom = 1.4; // Standard zoom for tablets
+                        }
                     }
 
                     // W and H are the effective world coordinates
@@ -713,13 +720,18 @@
                     H = Math.floor(ih * zoom);
                     
                     // The canvas size is the window size * DPR
-                    canvas.width = Math.floor(iw * DPR);
-                    canvas.height = Math.floor(ih * DPR);
+                    // Clamp DPR to avoid performance issues on high-DPI Android devices
+                    const effectiveDPR = Math.min(DPR, isMobile ? 2 : 3);
+                    canvas.width = Math.floor(iw * effectiveDPR);
+                    canvas.height = Math.floor(ih * effectiveDPR);
                     canvas.style.width = iw + "px";
                     canvas.style.height = ih + "px";
 
                     // Scale context to fit the WxH game world onto the canvas
-                    ctx.setTransform(DPR / zoom, 0, 0, DPR / zoom, 0, 0);
+                    ctx.setTransform(effectiveDPR / zoom, 0, 0, effectiveDPR / zoom, 0, 0);
+                    
+                    // Reinitialize stars for new dimensions
+                    initStars();
                 }
                 window.addEventListener("resize", resize);
                 resize();
@@ -767,8 +779,20 @@
                 let ac = null;
                 function ensureAudio() {
                     if (muted) return;
-                    if (!ac) ac = new AudioCtx();
-                    if (ac.state === "suspended") ac.resume().catch(() => {});
+                    if (!ac) {
+                        try {
+                            ac = new AudioCtx();
+                        } catch (e) {
+                            console.warn("AudioContext not supported:", e);
+                            return;
+                        }
+                    }
+                    if (ac.state === "suspended") {
+                        // Try to resume audio context (required on Android)
+                        ac.resume().catch((e) => {
+                            console.warn("Failed to resume AudioContext:", e);
+                        });
+                    }
                 }
                 function beep({
                     freq = 440,
@@ -866,8 +890,8 @@
                     active: false,
                 };
                 
-                // Check if it's a mobile device
-                const isMobile = window.innerWidth < 800;
+                // Check if it's a mobile device (more comprehensive detection)
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 800;
                 
                 window.addEventListener("pointerdown", (e) => {
                     pointer.down = true;
@@ -878,10 +902,20 @@
                     const rect = canvas.getBoundingClientRect();
                     const scaleX = W / rect.width;
                     const scaleY = H / rect.height;
-                    pointer.x = (e.clientX - rect.left) * scaleX;
-                    pointer.y = (e.clientY - rect.top) * scaleY;
+                    
+                    // Handle both touch and mouse events
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    
+                    pointer.x = (clientX - rect.left) * scaleX;
+                    pointer.y = (clientY - rect.top) * scaleY;
                     ensureAudio();
-                });
+                    
+                    // Prevent default touch behavior on mobile to avoid scrolling
+                    if (isMobile && e.preventDefault) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
                 
                 // Track mouse movement continuously on PC for unified control
                 window.addEventListener("mousemove", (e) => {
@@ -904,10 +938,20 @@
                         const rect = canvas.getBoundingClientRect();
                         const scaleX = W / rect.width;
                         const scaleY = H / rect.height;
-                        pointer.x = (e.clientX - rect.left) * scaleX;
-                        pointer.y = (e.clientY - rect.top) * scaleY;
+                        
+                        // Handle both touch and mouse events
+                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                        
+                        pointer.x = (clientX - rect.left) * scaleX;
+                        pointer.y = (clientY - rect.top) * scaleY;
+                        
+                        // Prevent default touch behavior on mobile to avoid scrolling
+                        if (isMobile && e.preventDefault) {
+                            e.preventDefault();
+                        }
                     }
-                });
+                }, { passive: false });
                 
                 window.addEventListener("pointerup", () => {
                     pointer.down = false;
@@ -1976,8 +2020,11 @@
                 }
                 seedPowerPill();
 
-                // Resume audio on first interaction
-                window.addEventListener("click", ensureAudio, { once: false });
+                // Resume audio on first interaction (more comprehensive for Android)
+                const audioInitEvents = ["click", "touchstart", "keydown", "pointerdown"];
+                audioInitEvents.forEach(eventType => {
+                    window.addEventListener(eventType, ensureAudio, { once: false, passive: true });
+                });
 
                 // ===== PWA Service Worker Registration =====
                 if ('serviceWorker' in navigator) {

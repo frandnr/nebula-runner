@@ -3,11 +3,12 @@
   "short_name": "NebulaRunner",
   "description": "Schiva meteoriti, raccogli cristalli, attiva power-up e scala i livelli",
   "start_url": ".",
-  "display": "fullscreen",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
   "status_bar": "black",
   "background_color": "#070816",
   "theme_color": "#7cf7ff",
-  "orientation": "any",
+  "orientation": "portrait-primary",
   "scope": ".",
   "icons": [
     {
