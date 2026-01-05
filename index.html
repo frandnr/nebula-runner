@@ -623,13 +623,26 @@
                     H = 0,
                     t = 0;
                 function resize() {
-                    W = Math.floor(innerWidth);
-                    H = Math.floor(innerHeight);
-                    canvas.width = Math.floor(W * DPR);
-                    canvas.height = Math.floor(H * DPR);
-                    canvas.style.width = W + "px";
-                    canvas.style.height = H + "px";
-                    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+                    let zoom = 1;
+                    const iw = innerWidth;
+                    const ih = innerHeight;
+
+                    if (iw < 800) {
+                        zoom = 1.4; // Zoom out by 40% on mobile
+                    }
+
+                    // W and H are the effective world coordinates
+                    W = Math.floor(iw * zoom);
+                    H = Math.floor(ih * zoom);
+                    
+                    // The canvas size is the window size * DPR
+                    canvas.width = Math.floor(iw * DPR);
+                    canvas.height = Math.floor(ih * DPR);
+                    canvas.style.width = iw + "px";
+                    canvas.style.height = ih + "px";
+
+                    // Scale context to fit the WxH game world onto the canvas
+                    ctx.setTransform(DPR / zoom, 0, 0, DPR / zoom, 0, 0);
                 }
                 window.addEventListener("resize", resize);
                 resize();
@@ -783,7 +796,10 @@
                 };
                 window.addEventListener("pointerdown", (e) => {
                     pointer.down = true;
-                    pointer.active = true;
+                    // Only activate pointer movement for touch events
+                    if (e.pointerType === 'touch') { 
+                        pointer.active = true;
+                    }
                     pointer.x = e.clientX;
                     pointer.y = e.clientY;
                     ensureAudio();
